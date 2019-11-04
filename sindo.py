@@ -2,9 +2,31 @@ from datetime import timedelta
 from datetime import datetime
 import yfinance as yf
 import argparse
+from all_index_nasdaq import *
+import math
+
+
+def mean(l):
+	m=0
+	for k in l:
+		m+=k
+	if(len(l)>0):
+		m/=len(l)
+	return m
+
+def st_dev(l,m=None):
+	if m==None:
+		m=mean(l)
+	dev=0
+	for k in l:
+		dev+=(k-m)*(k-m)
+	if(len(l)>0):
+		dev/=len(l)
+	dev=math.sqrt(dev)
+	return dev
 
 #stock investment network data organizer
-class StocDaykMeasure(object):
+class StockDaykMeasure(object):
 
 	def __init__(self,idx,dt,op,cls,div):
 		self._dt=dt
@@ -42,6 +64,7 @@ class StockDataAnalysys(object):
 		self._st_datas=[]
 		self._div_dates=[]
 		self._dividend_period=0
+		self._idx=idx
 		self._analyze(date_start,date_end,idx)
 
 	def _get_stock_measure(self,date):
@@ -61,15 +84,15 @@ class StockDataAnalysys(object):
 
 		tot_time=date_end-date_start
 		per=str(tot_time.days)+"d"
-		print per
+		#print per
 		# get historical market data
 		hist = msft.history(period=per)
 
 		for i in range(0,len(hist['Open'])):
 			dt=datetime.strptime(str(hist.axes[0][i]), "%Y-%m-%d %H:%M:%S")
-			stock=StocDaykMeasure(idx,dt,hist['Open'][i],hist['Close'][i],(hist['Dividends'][i]!=0.0))
+			stock=StockDaykMeasure(idx,dt,hist['Open'][i],hist['Close'][i],(hist['Dividends'][i]!=0.0))
 			self._st_datas.append(stock)
-			print stock
+			# print stock
 		self._do_analysis()
 
 class DividendAnalysis(StockDataAnalysys):
@@ -89,7 +112,7 @@ class DividendAnalysis(StockDataAnalysys):
 
 	def _get_next_dividend_date(self):
 		if(self._dividend_period==0):
-			raise Exception("No divindend dates")
+			return None
 
 		td=timedelta(days=self._dividend_period)
 		return(self._div_dates[len(self._div_dates)-1]+td)		
@@ -101,7 +124,7 @@ class DividendAnalysis(StockDataAnalysys):
 		else:
 			l=len(self._div_dates)
 			self._dividend_period=(self._div_dates[l-1]-self._div_dates[l-2]).days
-		print "period:",self._dividend_period
+		#print "period:",self._dividend_period
 
 	def _calc_segment(self,date_start,date_div,date_end):
 		curr_d=date_start
@@ -109,7 +132,7 @@ class DividendAnalysis(StockDataAnalysys):
 		delta_t=timedelta(days=1)
 		min=9999999
 		min_date=date_start
-		min_st=None
+		min_st=self._get_stock_measure(curr_d)
 		while(curr_d<date_div):
 			st=self._get_stock_measure(curr_d)
 			if (st!=None) and (st.get_close()<min):
@@ -118,9 +141,10 @@ class DividendAnalysis(StockDataAnalysys):
 				min_st=st
 			curr_d=curr_d+delta_t
 
+		curr_d=min_date
 		max=0
 		max_date=min_date
-		max_st=None
+		max_st=self._get_stock_measure(curr_d)
 		while(curr_d<date_end):
 			st=self._get_stock_measure(curr_d)
 			if (st!=None) and (st.get_close()>max):
@@ -129,6 +153,9 @@ class DividendAnalysis(StockDataAnalysys):
 				max=st.get_close()
 
 			curr_d=curr_d+delta_t
+
+		if(max_st==None or min_st==None):
+			return
 
 		benefit=100*(max_st.get_close()-min_st.get_close())/min_st.get_close()
 		days_min=(min_date-date_div).days
@@ -151,22 +178,23 @@ class DividendAnalysis(StockDataAnalysys):
 	def _do_analysis(self):
 		self._calc_dividend_dates()
 		self._calc_dividend_period()
+		if(self._dividend_period==0):
+			print "skipping %s no dividends"%self._idx
+			return
 		dt_range=timedelta(days=10)
 		for k in self._div_dates:
 			self._calc_segment(k-dt_range,k,k+dt_range)
 
-		day_buy_mean=0
-		day_sell_mean=0
-		if(len(self._days_buy)!=len(self._days_sell)):
-			raise Exception("(len(self._days_buy)!=len(self._days_sell))")
-		for i in range(0,len(self._days_buy)):
-			day_sell_mean+=self._days_sell[i]
-			day_buy_mean+=self._days_buy[i]
-
-		day_buy_mean/=len(self._days_buy)
-		day_sell_mean/=len(self._days_buy)
+		day_buy_mean=mean(self._days_buy)
+		day_sell_mean=mean(self._days_sell)
+		benefit_mean=mean(self._benefits)
+		
 		print "buy mean:",day_buy_mean
 		print "sell mean:",day_sell_mean
+
+		std_dev_day_buy=st_dev(self._days_buy,day_buy_mean)
+		std_dev_day_sell=st_dev(self._days_sell,day_sell_mean)
+		
 
 		next_dividend=self._get_next_dividend_date()
 		td_buy=timedelta(days=day_buy_mean)
@@ -174,21 +202,23 @@ class DividendAnalysis(StockDataAnalysys):
 
 		date_buy=next_dividend+td_buy
 		date_sell=next_dividend+td_sell
-		print "Investment Advice:"
+		print "-------%s Investment Advice:----------------"%self._idx
 		print "Buy date:",date_buy
 		print "Sell date:",date_sell
+		print "Benefit mean:",benefit_mean
+		print "buy deviation:",std_dev_day_buy
+		print "sell deviation:",std_dev_day_sell
+		print "--------------------------------------------"
 
 
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-idx',required=True,metavar='N',nargs='+',dest='index_file_list')
-	parser.add_argument('-history',required=True,metavar='N',type=int,nargs='+',dest='hist_days_list')
+	parser.add_argument('-hist',required=True,metavar='<history_days>',type=int,dest='hist_days')
 	configuration = parser.parse_args()
-	if(len(configuration.index_file_list)!=len(configuration.hist_days_list)):
-		print "index and historics do not match"
-		sys.exit(1)
 
 	td=datetime.now()-timedelta(days=30)
+	#configuration.index_file_list=all_index_nasdaq
 	for i in range(0,len(configuration.index_file_list)):
-		kk=DividendAnalysis(td-timedelta(days=configuration.hist_days_list[i]),td,configuration.index_file_list[i])
+		kk=DividendAnalysis(td-timedelta(days=configuration.hist_days),td,configuration.index_file_list[i])
