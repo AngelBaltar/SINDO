@@ -67,7 +67,7 @@ class StockDataAnalysys(object):
 		self._st_datas={}
 		self._idx=idx
 		self._score=0
-		self._analyze(date_start,date_end,idx)
+		self._analyze()
 	
 	def __str__(self):
 		return "%s [%s]->[%s]:%f"%(self._idx,str(self._date_start),str(self._date_end),self.get_score())	
@@ -94,12 +94,12 @@ class StockDataAnalysys(object):
 	def _do_analysis(self):
 		raise Exception("_do_analysis shall be override on lowe class")
 
-	def _analyze(self,date_start,date_end,idx):
+	def _analyze(self):
 		#fill
 		#self._st_datas
-		msft = yf.Ticker(idx)
+		msft = yf.Ticker(self._idx)
 
-		tot_time=date_end-date_start
+		tot_time=self._date_end-self._date_start
 		per=str(tot_time.days)+"d"
 		#print per
 		# get historical market data
@@ -107,7 +107,7 @@ class StockDataAnalysys(object):
 
 		for i in range(0,len(hist['Open'])):
 			dt=datetime.strptime(str(hist.axes[0][i]), "%Y-%m-%d %H:%M:%S")
-			stock=StockDaykMeasure(idx,dt,hist['Open'][i],hist['Close'][i],(hist['Dividends'][i]!=0.0))
+			stock=StockDaykMeasure(self._idx,dt,hist['Open'][i],hist['Close'][i],(hist['Dividends'][i]!=0.0))
 			self._st_datas[str(stock.get_date())]=stock
 			# print stock
 		self._do_analysis()
@@ -120,6 +120,11 @@ class DividendAnalysis(StockDataAnalysys):
 		self._days_buy=[]
 		self._days_sell=[]
 		self._benefits=[]
+		self._date_buy=None
+		self._date_sell=None
+		self._benefit_mean=0
+		self._std_dev_day_buy=0
+		self._std_dev_day_sell=0
 		super(DividendAnalysis,self).__init__(date_start,date_end,idx)
 
 	def __str__(self):
