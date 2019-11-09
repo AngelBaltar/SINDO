@@ -42,7 +42,6 @@ class StockHistoricMeasure(object):
 		self._date_end=date_end
 		self._idx=idx
 		self._st_datas=[]
-		self.fill_data()
 
 	def __str__(self):
 		return "%s [%s]->[%s]"%(self._idx,str(self._date_start),str(self._date_end))
@@ -83,7 +82,7 @@ class StockHistoricMeasure(object):
 		try:
 			hist = msft.history(period=per)
 		except:
-			time.sleep(1)
+			time.sleep(0.2)
 			hist = msft.history(period=per)
 
 		for i in range(0,len(hist['Open'])):

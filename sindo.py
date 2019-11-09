@@ -1,8 +1,9 @@
 from datetime import timedelta
 from datetime import datetime
 from StockDataAnalysis import *
+from StockMeasure import *
 from all_index_nasdaq import *
-from multiprocessing import Pool
+import multiprocessing
 import argparse
 import sys
 import time
@@ -13,7 +14,8 @@ def analizer(stock_analisys):
 	return stock_analisys
 
 def data_filler(stock_historic_meas):
-	pass
+	stock_historic_meas.fill_data()
+	return stock_historic_meas
 		
 if __name__ == "__main__":
 
@@ -30,20 +32,30 @@ if __name__ == "__main__":
 	else:
 		print "argument error no index list"
 		sys.exit(1)
+	
 	start=time.time()
 	td=datetime.now()
+
 	analisys_list=[]
+	data_list=[]
 	count=0
 	print "Retrieving data..."
+
+	p = multiprocessing.Pool(max(multiprocessing.cpu_count()-2,2))
+	
 	for i in idx_list:
-		kk=DividendAnalysis(td-timedelta(days=configuration.hist_days),td,i)
+		h=StockHistoricMeasure(td-timedelta(days=configuration.hist_days),td,i)
+		data_list.append(h)
+
+	data_list=p.map(data_filler,data_list)
+	
+	for i in data_list:
+		kk=DividendAnalysis()
+		kk.set_hist(i)
 		analisys_list.append(kk)
-		count+=1
-		sys.stdout.write("\r%02d%%"%(count*100/len(idx_list)))
-		sys.stdout.flush()
 
 	print "\nAnalyzing data..."
-	p = Pool(2)
+	
 	analisys_list=p.map(analizer, analisys_list)
 	p.close()
 	p.join()

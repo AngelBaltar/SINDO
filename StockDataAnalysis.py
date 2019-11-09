@@ -1,4 +1,4 @@
-from StockMeasure import *
+#from StockMeasure import *
 from datetime import timedelta
 from datetime import datetime
 import math
@@ -28,9 +28,8 @@ class StockDataAnalysis(object):
 		self._score=0
 		self._hist=None
 
-	def __init__(self,date_start,date_end,idx):
-		self._score=0
-		self._hist=StockHistoricMeasure(date_start,date_end,idx)
+	def set_hist(self,h):
+		self._hist=h
 
 	def __str__(self):
 		return "%s:%f"%(str(self._hist),self.get_score())
@@ -65,19 +64,6 @@ class DividendAnalysis(StockDataAnalysis):
 		self._std_dev_day_buy=0
 		self._std_dev_day_sell=0
 		super(DividendAnalysis,self).__init__()
-
-	def __init__(self,date_start,date_end,idx):
-		self._div_dates=[]
-		self._dividend_period=0
-		self._days_buy=[]
-		self._days_sell=[]
-		self._benefits=[]
-		self._date_buy=None
-		self._date_sell=None
-		self._benefit_mean=0
-		self._std_dev_day_buy=0
-		self._std_dev_day_sell=0
-		super(DividendAnalysis,self).__init__(date_start,date_end,idx)
 
 	def __str__(self):
 		ret=super(DividendAnalysis,self).__str__()+"\n"
