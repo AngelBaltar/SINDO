@@ -23,6 +23,7 @@ if __name__ == "__main__":
 	parser.add_argument('-idx',required=False,metavar='N',nargs='+',dest='index_file_list')
 	parser.add_argument('--all_nasdaq',required=False,nargs='?',type=int,const=1,metavar='<all_nasdaq>',dest='all_nasdaq')
 	parser.add_argument('-hist',required=True,metavar='<history_days>',type=int,dest='hist_days')
+	parser.add_argument('-o',required=True,metavar='<out_file>',dest='out_file')
 	configuration = parser.parse_args()
 
 	if(configuration.all_nasdaq):
@@ -60,19 +61,11 @@ if __name__ == "__main__":
 	p.close()
 	p.join()
 
-	# count=0
-	# for a in analisys_list:
-	# 	a.analyze()
-	# 	count+=1
-	# 	sys.stdout.write("\r%02d%%"%(count*100/len(analisys_list)))
-	# 	sys.stdout.flush()
-
+	fo=open(configuration.out_file,'w')
 	analisys_list.sort(reverse=True)
 	count=0
 	for i in analisys_list:
-		print i
-		count+=1
-		if(count>20):
-			break
+		if i.get_score()>0:
+			fo.write(str(i)+"\n")
 	end=time.time()
 	print "elapsed time %f"%(end-start)

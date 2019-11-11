@@ -151,8 +151,8 @@ class DividendAnalysis(StockDataAnalysis):
 	def analyze(self):
 		self._calc_dividend_dates()
 		self._calc_dividend_period()
-		if(self._dividend_period==0):
-			print "skipping %s no dividends"%self._get_hist().get_idx()
+		if(len(self._div_dates)<3):
+			print "skipping %s no enough dividends"%self._get_hist().get_idx()
 			return
 		dt_range=timedelta(days=10)
 		for k in self._div_dates:
@@ -176,6 +176,8 @@ class DividendAnalysis(StockDataAnalysis):
 
 		self._date_buy=next_dividend+td_buy
 		self._date_sell=next_dividend+td_sell
-
+		td=datetime.now()
+		if(self._date_buy<td) or (self._date_sell<td):#not a valid investment
+			return
 		score=self._benefit_mean*100/((self._std_dev_day_sell+1)*(self._std_dev_day_buy+1))
 		self._set_score(score)
