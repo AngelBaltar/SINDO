@@ -179,5 +179,5 @@ class DividendAnalysis(StockDataAnalysis):
 		td=datetime.now()
 		if(self._date_buy<td) or (self._date_sell<td):#not a valid investment
 			return
-		score=self._benefit_mean*100/((self._std_dev_day_sell+1)*(self._std_dev_day_buy+1))
+		score=self._benefit_mean/((self._std_dev_day_sell*self._std_dev_day_buy)+1)
 		self._set_score(score)

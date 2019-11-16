@@ -62,10 +62,17 @@ if __name__ == "__main__":
 	p.join()
 
 	fo=open(configuration.out_file,'w')
+	fpy=open(configuration.out_file+".py",'w')
 	analisys_list.sort(reverse=True)
 	count=0
+	stock_list=[]
 	for i in analisys_list:
 		if i.get_score()>0:
 			fo.write(str(i)+"\n")
+			stock_list.append(str(i._get_hist().get_idx()))
+
+	fpy.write("stock_list=%s"%str(stock_list))
+	fpy.close()
+	fo.close()
 	end=time.time()
 	print "elapsed time %f"%(end-start)
