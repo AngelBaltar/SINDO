@@ -1,4 +1,4 @@
-all_index_nasdaq=[
+stock_list=[
 						
 					'TXG',
 					'YI',

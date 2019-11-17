@@ -43,8 +43,12 @@ class StockHistoricMeasure(object):
 		self._idx=idx
 		self._st_datas=[]
 
+	@classmethod
+	def get_csv_str(self):
+		return "index;Date start;Date end"
+
 	def __str__(self):
-		return "%s [%s]->[%s]"%(self._idx,str(self._date_start),str(self._date_end))
+		return "%s;%s;%s"%(self._idx,str(self._date_start),str(self._date_end))
 
 	def get_start_date(self):
 		return self._date_start
@@ -90,3 +94,11 @@ class StockHistoricMeasure(object):
 			stock=StockDaykMeasure(self._idx,dt,hist['Open'][i],hist['Close'][i],(hist['Dividends'][i]!=0.0))
 			self._st_datas.append(stock)
 			#print stock
+
+	def print_to_csv(self,f_out):
+		f_out.write("Open;Close;Dividend\n")
+		for k in self:
+			o=str(k.get_open()).replace('.',',')
+			c=str(k.get_close()).replace('.',',')
+			d='1' if k.is_dividend() else '0'
+			f_out.write("%s;%s;%s\n"%(o,c,d))

@@ -1,4 +1,4 @@
-#from StockMeasure import *
+from StockMeasure import *
 from datetime import timedelta
 from datetime import datetime
 import math
@@ -31,8 +31,12 @@ class StockDataAnalysis(object):
 	def set_hist(self,h):
 		self._hist=h
 
+	@classmethod
+	def get_csv_str(self):
+		return "%s;score"%(StockHistoricMeasure.get_csv_str())
+
 	def __str__(self):
-		return "%s:%f"%(str(self._hist),self.get_score())
+		return "%s;%s"%(str(self._hist),str(self.get_score()).replace('.',','))
 
 	def get_score(self):
 		return self._score
@@ -40,7 +44,7 @@ class StockDataAnalysis(object):
 	def _set_score(self,s):
 		self._score=s
 
-	def _get_hist(self):
+	def get_hist(self):
 		return self._hist
 
 	def __cmp__(self,obj):
@@ -65,17 +69,27 @@ class DividendAnalysis(StockDataAnalysis):
 		self._std_dev_day_sell=0
 		super(DividendAnalysis,self).__init__()
 
+	@classmethod
+	def get_csv_str(self):
+		ret=super(DividendAnalysis,self).get_csv_str()+";"
+		ret+="Date Buy;"
+		ret+="Date Sell;"
+		ret+="Benefit mean;"
+		ret+="Buy deviation;"
+		ret+="Sell deviation\n"
+		return ret
+
 	def __str__(self):
-		ret=super(DividendAnalysis,self).__str__()+"\n"
-		ret+="Buy date:"+str(self._date_buy)+"\n"
-		ret+="Sell date:"+str(self._date_sell)+"\n"
-		ret+="Benefit mean:"+str(self._benefit_mean)+"\n"
-		ret+="buy deviation:"+str(self._std_dev_day_buy)+"\n"
-		ret+="sell deviation:"+str(self._std_dev_day_sell)+"\n"
+		ret=super(DividendAnalysis,self).__str__()+";"
+		ret+=str(self._date_buy)+";"
+		ret+=str(self._date_sell)+";"
+		ret+=str(self._benefit_mean).replace('.',',')+";"
+		ret+=str(self._std_dev_day_buy).replace('.',',')+";"
+		ret+=str(self._std_dev_day_sell).replace('.',',')+"\n"
 		return ret
 
 	def _calc_dividend_dates(self):
-		hist=self._get_hist()
+		hist=self.get_hist()
 		for k in hist:
 			if(k.is_dividend()):
 				self._div_dates.append(k.get_date())
@@ -101,7 +115,7 @@ class DividendAnalysis(StockDataAnalysis):
 	def _calc_segment(self,date_start,date_div,date_end):
 		curr_d=date_start
 
-		hist=self._get_hist()
+		hist=self.get_hist()
 		delta_t=timedelta(days=1)
 		min=9999999
 		min_date=date_start
@@ -152,7 +166,7 @@ class DividendAnalysis(StockDataAnalysis):
 		self._calc_dividend_dates()
 		self._calc_dividend_period()
 		if(len(self._div_dates)<3):
-			print "skipping %s no enough dividends"%self._get_hist().get_idx()
+			print "skipping %s no enough dividends"%self.get_hist().get_idx()
 			return
 		dt_range=timedelta(days=10)
 		for k in self._div_dates:

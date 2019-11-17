@@ -8,6 +8,8 @@ import argparse
 import sys
 import time
 
+version="v0.1"
+
 
 def analizer(stock_analisys):
 	stock_analisys.analyze()
@@ -21,13 +23,19 @@ if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-idx',required=False,metavar='N',nargs='+',dest='index_file_list')
-	parser.add_argument('--all_nasdaq',required=False,nargs='?',type=int,const=1,metavar='<all_nasdaq>',dest='all_nasdaq')
-	parser.add_argument('-hist',required=True,metavar='<history_days>',type=int,dest='hist_days')
-	parser.add_argument('-o',required=True,metavar='<out_file>',dest='out_file')
+	parser.add_argument('-list_idx',required=False,metavar='<list_idx>',dest='list_idx')
+	parser.add_argument('-version',required=False,nargs='?',type=bool,const=True,metavar='<version>',dest='version')
+	parser.add_argument('-hist',required=False,metavar='<history_days>',type=int,dest='hist_days')
+	parser.add_argument('-o',required=False,metavar='<out_file>',dest='out_file')
+	parser.add_argument('-print_historics',required=False,nargs='?',type=bool,const=True,metavar='<print_historics>',dest='print_historics')
 	configuration = parser.parse_args()
 
-	if(configuration.all_nasdaq):
-		idx_list=all_index_nasdaq
+	if(configuration.version):
+		print version
+		sys.exit(0)
+	if(configuration.list_idx):
+		execfile(configuration.list_idx)
+		idx_list=stock_list
 	elif(configuration.index_file_list):
 		idx_list=configuration.index_file_list
 	else:
@@ -61,16 +69,23 @@ if __name__ == "__main__":
 	p.close()
 	p.join()
 
-	fo=open(configuration.out_file,'w')
+	fo=open(configuration.out_file+".csv",'w')
 	fpy=open(configuration.out_file+".py",'w')
+
 	analisys_list.sort(reverse=True)
 	count=0
 	stock_list=[]
+	fo.write(DividendAnalysis.get_csv_str())
 	for i in analisys_list:
+		if(configuration.print_historics):
+			fh=open(configuration.out_file+"_"+str(i.get_hist().get_idx())+".csv",'w')
+			i.get_hist().print_to_csv(fh)
+			fh.close()
 		if i.get_score()>0:
 			fo.write(str(i)+"\n")
-			stock_list.append(str(i._get_hist().get_idx()))
+			stock_list.append(str(i.get_hist().get_idx()))
 
+	
 	fpy.write("stock_list=%s"%str(stock_list))
 	fpy.close()
 	fo.close()
