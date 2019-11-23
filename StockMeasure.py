@@ -96,9 +96,10 @@ class StockHistoricMeasure(object):
 			#print stock
 
 	def print_to_csv(self,f_out):
-		f_out.write("Open;Close;Dividend\n")
+		f_out.write("Date;Open;Close;Dividend\n")
 		for k in self:
+			dt=str(k.get_date())
 			o=str(k.get_open()).replace('.',',')
 			c=str(k.get_close()).replace('.',',')
 			d='1' if k.is_dividend() else '0'
-			f_out.write("%s;%s;%s\n"%(o,c,d))
+			f_out.write("%s;%s;%s;%s\n"%(dt,o,c,d))
