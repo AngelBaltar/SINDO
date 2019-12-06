@@ -3,6 +3,7 @@ from datetime import datetime
 from StockDataAnalysis import *
 from StockMeasure import *
 from all_index_nasdaq import *
+from SindoDatabase import *
 import multiprocessing
 import argparse
 import sys
@@ -11,13 +12,22 @@ import time
 version="v0.1"
 
 
-def analizer(stock_analisys):
-	stock_analisys.analyze()
-	return stock_analisys
+# def analizer(stock_analisys):
+# 	stock_analisys.analyze()
+# 	return stock_analisys
 
-def data_filler(stock_historic_meas):
-	stock_historic_meas.fill_data()
-	return stock_historic_meas
+# def data_filler(stock_historic_meas):
+# 	stock_historic_meas.fill_data()
+# 	return stock_historic_meas
+
+def analizer(idx):
+	td=datetime.now()
+	h=get_data(td-timedelta(days=configuration.hist_days),td,idx)
+	kk=DividendAnalysis()
+	kk.set_hist(h)
+	kk.analyze()
+	return kk
+
 		
 if __name__ == "__main__":
 
@@ -43,31 +53,19 @@ if __name__ == "__main__":
 		sys.exit(1)
 	
 	start=time.time()
-	td=datetime.now()
+	
 
 	analisys_list=[]
-	data_list=[]
-	count=0
-	print "Retrieving data..."
+	print "working..."
 
 	p = multiprocessing.Pool(max(multiprocessing.cpu_count()-2,2))
 	
-	for i in idx_list:
-		h=StockHistoricMeasure(td-timedelta(days=configuration.hist_days),td,i)
-		data_list.append(h)
-
-	data_list=p.map(data_filler,data_list)
 	
-	for i in data_list:
-		kk=DividendAnalysis()
-		kk.set_hist(i)
-		analisys_list.append(kk)
-
-	print "\nAnalyzing data..."
-	
-	analisys_list=p.map(analizer, analisys_list)
-	p.close()
-	p.join()
+	#analisys_list=p.map(analizer, idx_list)
+	#p.close()
+	#p.join()
+	for k in idx_list:
+		analizer(k)
 
 	fo=open(configuration.out_file+".csv",'w')
 	fpy=open(configuration.out_file+".py",'w')

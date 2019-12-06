@@ -11,6 +11,13 @@ class StockDaykMeasure(object):
 		self._div=div
 		self._idx=idx
 
+	def fill_from_csv_line(self,csv_line):
+		params=csv_line.split(';')
+		self._dt=datetime(params[0])
+		self._op=float(params[1]).replace(',','.')
+		self._cls=float(params[2]).replace(',','.')
+		self._div=int(params[3])
+
 	def __str__(self):
 		ret=self._idx+" at "+str(self.get_date())
 		ret+=" Open: %02.02f Close: %02.02f"%(self.get_open(),self.get_close())
@@ -35,6 +42,18 @@ class StockDaykMeasure(object):
 	def get_grad(self):
 		return get_close()-get_open()
 
+	def to_csv(self):
+		dt=str(self.get_date())
+		o=str(self.get_open()).replace('.',',')
+		c=str(self.get_close()).replace('.',',')
+		d='1' if self.is_dividend() else '0'
+		return "%s;%s;%s;%s\n"%(dt,o,c,d)
+
+	def __cmp__(self,obj):
+		if not obj:
+			return False
+		return cmp(self.get_date(),obj.get_date())
+
 class StockHistoricMeasure(object):
 
 	def __init__(self,date_start,date_end,idx):
@@ -42,6 +61,14 @@ class StockHistoricMeasure(object):
 		self._date_end=date_end
 		self._idx=idx
 		self._st_datas=[]
+
+	def __init__(self,idx,datas):
+		self._st_datas=datas
+		self.sort()
+		self._date_start=self._st_datas[0]
+		self._date_end=self._st_datas[-1]
+		self._idx=idx
+		
 
 	@classmethod
 	def get_csv_str(self):
@@ -59,6 +86,9 @@ class StockHistoricMeasure(object):
 	def get_idx(self):
 		return self._idx
 
+	def sort(self):
+		self._st_datas.sort()
+
 	def __iter__(self):
 		return self._st_datas.__iter__()
 
@@ -73,6 +103,11 @@ class StockHistoricMeasure(object):
 			if(k.get_date()==str(index)):
 				return k
 		return None
+
+	def __add__(self,o):
+		if(self.get_idx()!=o.get_idx()):
+			raise Exception("Adding %s with %s"%(self.get_idx(),o.get_idx()))
+		return StockHistoricMeasure(self.get_idx(),self._st_datas+o._st_datas)
 
 	def fill_data(self):
 		#fill
@@ -98,8 +133,4 @@ class StockHistoricMeasure(object):
 	def print_to_csv(self,f_out):
 		f_out.write("Date;Open;Close;Dividend\n")
 		for k in self:
-			dt=str(k.get_date())
-			o=str(k.get_open()).replace('.',',')
-			c=str(k.get_close()).replace('.',',')
-			d='1' if k.is_dividend() else '0'
-			f_out.write("%s;%s;%s;%s\n"%(dt,o,c,d))
+			f_out.write("%s"%(k.to_csv()))
