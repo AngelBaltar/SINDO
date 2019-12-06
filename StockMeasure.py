@@ -49,11 +49,6 @@ class StockDaykMeasure(object):
 		d='1' if self.is_dividend() else '0'
 		return "%s;%s;%s;%s\n"%(dt,o,c,d)
 
-	def __cmp__(self,obj):
-		if not obj:
-			return False
-		return cmp(self.get_date(),obj.get_date())
-
 class StockHistoricMeasure(object):
 
 	def __init__(self,date_start,date_end,idx):
@@ -87,7 +82,7 @@ class StockHistoricMeasure(object):
 		return self._idx
 
 	def sort(self):
-		self._st_datas.sort()
+		self._st_datas.sort(key=lambda s:s.get_date())
 
 	def __iter__(self):
 		return self._st_datas.__iter__()
@@ -105,6 +100,8 @@ class StockHistoricMeasure(object):
 		return None
 
 	def __add__(self,o):
+		if(not o):
+			return self
 		if(self.get_idx()!=o.get_idx()):
 			raise Exception("Adding %s with %s"%(self.get_idx(),o.get_idx()))
 		return StockHistoricMeasure(self.get_idx(),self._st_datas+o._st_datas)

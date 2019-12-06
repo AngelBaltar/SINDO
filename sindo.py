@@ -9,24 +9,21 @@ import argparse
 import sys
 import time
 
-version="v0.1"
-
-
-# def analizer(stock_analisys):
-# 	stock_analisys.analyze()
-# 	return stock_analisys
-
-# def data_filler(stock_historic_meas):
-# 	stock_historic_meas.fill_data()
-# 	return stock_historic_meas
+version="v0.2"
 
 def analizer(idx):
+	ret=""
 	td=datetime.now()
 	h=get_data(td-timedelta(days=configuration.hist_days),td,idx)
 	kk=DividendAnalysis()
-	kk.set_hist(h)
-	kk.analyze()
-	return kk
+	if(h):
+		kk.set_hist(h)
+		kk.analyze()
+		if(kk.get_score()>0):
+			ret=str(kk)+"\n"
+		del kk
+	return ret
+	
 
 		
 if __name__ == "__main__":
@@ -36,8 +33,7 @@ if __name__ == "__main__":
 	parser.add_argument('-list_idx',required=False,metavar='<list_idx>',dest='list_idx')
 	parser.add_argument('-version',required=False,nargs='?',type=bool,const=True,metavar='<version>',dest='version')
 	parser.add_argument('-hist',required=False,metavar='<history_days>',type=int,dest='hist_days')
-	parser.add_argument('-o',required=False,metavar='<out_file>',dest='out_file')
-	parser.add_argument('-print_historics',required=False,nargs='?',type=bool,const=True,metavar='<print_historics>',dest='print_historics')
+	parser.add_argument('-o',required=True,metavar='<out_file>',dest='out_file')
 	configuration = parser.parse_args()
 
 	if(configuration.version):
@@ -59,33 +55,19 @@ if __name__ == "__main__":
 	print "working..."
 
 	p = multiprocessing.Pool(max(multiprocessing.cpu_count()-2,2))
-	
-	
-	#analisys_list=p.map(analizer, idx_list)
-	#p.close()
-	#p.join()
-	for k in idx_list:
-		analizer(k)
-
 	fo=open(configuration.out_file+".csv",'w')
-	fpy=open(configuration.out_file+".py",'w')
-
-	analisys_list.sort(reverse=True)
-	count=0
-	stock_list=[]
 	fo.write(DividendAnalysis.get_csv_str())
-	for i in analisys_list:
-		if(configuration.print_historics):
-			fh=open(configuration.out_file+"_"+str(i.get_hist().get_idx())+".csv",'w')
-			i.get_hist().print_to_csv(fh)
-			fh.close()
-		if i.get_score()>0:
-			fo.write(str(i)+"\n")
-			stock_list.append(str(i.get_hist().get_idx()))
 
+	print_list=p.map(analizer,idx_list)
+	p.close()
+	p.join()
+
+	# for k in idx_list:
+	# 	analisys_list.append(analizer(fo,k))
 	
-	fpy.write("stock_list=%s"%str(stock_list))
-	fpy.close()
+	for k in print_list:
+		fo.write(k)
+
 	fo.close()
 	end=time.time()
 	print "elapsed time %f"%(end-start)

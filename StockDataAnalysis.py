@@ -142,6 +142,7 @@ class DividendAnalysis(StockDataAnalysis):
 			curr_d=curr_d+delta_t
 
 		if(max_st==None or min_st==None):
+			print "kkkkk"
 			return
 
 		benefit=100*(max_st.get_close()-min_st.get_close())/min_st.get_close()

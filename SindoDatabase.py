@@ -20,8 +20,11 @@ def _fetch_data_from_yf(t_init,t_end,idx):
 		stock=StockDaykMeasure(idx,dt,hist['Open'][i],hist['Close'][i],(hist['Dividends'][i]!=0.0))
 		datas.append(stock)
 
-	sm=StockHistoricMeasure(idx,datas)
-	return sm
+	if(len(datas)>0):
+		sm=StockHistoricMeasure(idx,datas)
+		return sm
+	else:
+		return None
 
 def _fetch_data_from_database(f_data,t_init,t_end,idx):
 	datas=[]
@@ -52,8 +55,8 @@ def get_data(t_init,t_end,idx):
 	except:
 		#no data, retrieve it all
 		sm=_fetch_data_from_yf(t_init,t_end,idx)
-
-	f_data=open("SINDODB/%s.csv"%idx,'w')
-	sm.print_to_csv(f_data)
-	f_data.close()
+	if(sm):
+		f_data=open("SINDODB/%s.csv"%idx,'w')
+		sm.print_to_csv(f_data)
+		f_data.close()
 	return sm
