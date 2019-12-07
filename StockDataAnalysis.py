@@ -99,8 +99,8 @@ class DividendAnalysis(StockDataAnalysis):
 		for k in hist:
 			if(k.is_dividend()):
 				self._div_dates.append(k.get_date())
-				print k.get_date()
-		print len(self._div_dates)
+				#print k.get_date()
+		#print len(self._div_dates)
 
 	def _get_next_dividend_date(self):
 		if(self._dividend_period==0):
@@ -117,7 +117,7 @@ class DividendAnalysis(StockDataAnalysis):
 			self._dividend_period=0
 		else:
 			self._dividend_period=abs((self._div_dates[-2]-self._div_dates[-1]).days)
-		print "period:",self._dividend_period
+		#print "period:",self._dividend_period
 
 	def _calc_segment(self,date_start,date_div,date_end):
 		curr_d=date_start
@@ -149,21 +149,20 @@ class DividendAnalysis(StockDataAnalysis):
 			curr_d=curr_d+delta_t
 
 		if(max_st==None or min_st==None):
-			print "kkkkk"
 			return
 
 		benefit=100*(max_st.get_close()-min_st.get_close())/min_st.get_close()
 		days_min=(min_date-date_div).days
 		days_max=(max_date-date_div).days
-		print "---------------------------------------------------------"
-		print "date min:",min_date
-		print "price min:",min_st.get_close()
-		print "date max:",max_date
-		print "price max:",max_st.get_close()
-		print "days_min:",days_min
-		print "days_min:",days_max
-		print "benefit:",benefit,"%"
-		print "---------------------------------------------------------"
+		# print "---------------------------------------------------------"
+		# print "date min:",min_date
+		# print "price min:",min_st.get_close()
+		# print "date max:",max_date
+		# print "price max:",max_st.get_close()
+		# print "days_min:",days_min
+		# print "days_min:",days_max
+		# print "benefit:",benefit,"%"
+		# print "---------------------------------------------------------"
 
 		self._days_buy.append(days_min)
 		self._days_sell.append(days_max)
@@ -190,14 +189,19 @@ class DividendAnalysis(StockDataAnalysis):
 		self._std_dev_day_buy=st_dev(self._days_buy,day_buy_mean)
 		self._std_dev_day_sell=st_dev(self._days_sell,day_sell_mean)
 
-		print self._dividend_period
 		next_dividend=self._get_next_dividend_date()
 		#print "next dividend ",next_dividend
 		td_buy=timedelta(days=day_buy_mean)
 		td_sell=timedelta(days=day_sell_mean)
 
 		self._date_buy=next_dividend+td_buy
+		while(self._date_buy.weekday()==5) or ((self._date_buy.weekday()==6)):
+			self._date_buy+=timedelta(days=1)
+		
 		self._date_sell=next_dividend+td_sell
+		while(self._date_sell.weekday()==5) or ((self._date_sell.weekday()==6)):
+			self._date_sell-=timedelta(days=1)
+		
 		td=datetime.now()
 		if(self._date_buy<td) or (self._date_sell<td):#not a valid investment
 			return

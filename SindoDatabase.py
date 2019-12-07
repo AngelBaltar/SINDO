@@ -95,7 +95,7 @@ def _refill_database(sm):
 
 def get_data(t_init,t_end,idx):
 	sm=_fetch_data_from_database(idx,t_init,t_end)
-	print "fetch done"
+	#print "fetch done"
 	_refill_database(sm)
-	print "refill done"
+	#print "refill done"
 	return sm
