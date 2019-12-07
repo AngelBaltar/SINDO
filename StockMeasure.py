@@ -13,7 +13,7 @@ class StockDaykMeasure(object):
 
 	def fill_from_csv_line(self,csv_line):
 		params=csv_line.split(';')
-		self._dt=datetime.strptime(params[0],"%Y-%m-%d %H:%M:%S")
+		self._dt=datetime.strptime(params[0],"%Y-%m-%d")
 		self._op=float(params[1].replace(',','.'))
 		self._cls=float(params[2].replace(',','.'))
 		self._div=(int(params[3])==1)
@@ -43,7 +43,7 @@ class StockDaykMeasure(object):
 		return get_close()-get_open()
 
 	def to_csv(self):
-		dt=str(self.get_date())
+		dt=self.get_date().strftime('%Y-%m-%d')
 		o=str(self.get_open()).replace('.',',')
 		c=str(self.get_close()).replace('.',',')
 		d='1' if self.is_dividend() else '0'

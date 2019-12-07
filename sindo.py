@@ -54,16 +54,18 @@ if __name__ == "__main__":
 	analisys_list=[]
 	print "working..."
 
-	p = multiprocessing.Pool(max(multiprocessing.cpu_count()-2,2))
+	p = multiprocessing.Pool(max(multiprocessing.cpu_count()-1,2))
 	fo=open(configuration.out_file+".csv",'w')
 	fo.write(DividendAnalysis.get_csv_str())
 
+	print_list=[]
+	
 	print_list=p.map(analizer,idx_list)
 	p.close()
 	p.join()
 
 	# for k in idx_list:
-	# 	analisys_list.append(analizer(fo,k))
+	#  	print_list.append(analizer(k))
 	
 	for k in print_list:
 		fo.write(k)

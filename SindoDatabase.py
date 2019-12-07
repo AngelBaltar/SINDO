@@ -57,14 +57,15 @@ def _fetch_data_from_database(idx,t_init,t_end):
 		datas_init=sm.get_start_date()
 		datas_end=sm.get_end_date()
 		if(t_init<datas_init):
-			sm=sm+_fetch_data_from_yf(idx,t_init,datas_init)
+			sm=sm+_fetch_data_from_yf(idx,t_init,datas_init-timedelta(days=1))
 		if(t_end>datas_end):
-			sm=sm+_fetch_data_from_yf(idx,datas_end,t_end)
+			sm=sm+_fetch_data_from_yf(idx,datas_end+timedelta(days=1),t_end)
 	return sm
 
 def _refill_database(sm):
 	#TODO
 	all_file=_fetch_from_file_sys(sm.get_idx())
+	incr=None
 	if(all_file==None):
 		incr=sm
 	else:
@@ -79,23 +80,29 @@ def _refill_database(sm):
 
 		delta_t=timedelta(days=1)
 		datas=[]
-		while(incr_start_date<incr_end_date):
+		while(incr_start_date<=incr_end_date):
 			st=sm[incr_start_date]
 			if(st==None):
 				st=all_file[incr_start_date]
 			if(st!=None):
 				datas.append(st)
 			incr_start_date=incr_start_date+delta_t
-		incr=StockHistoricMeasure(sm.get_idx(),datas)
+		if len(datas)>0:
+			incr=StockHistoricMeasure(sm.get_idx(),datas)
 
-	f_data=open("SINDODB/%s.csv"%sm.get_idx(),'w')
-	
-	incr.print_to_csv(f_data)
-	f_data.close()
+	if(incr):
+		f_data=open("SINDODB/%s.csv"%sm.get_idx(),'w')
+		
+		incr.print_to_csv(f_data)
+		f_data.close()
 
 def get_data(t_init,t_end,idx):
 	sm=_fetch_data_from_database(idx,t_init,t_end)
 	#print "fetch done"
-	_refill_database(sm)
+	if sm:
+		_refill_database(sm)
 	#print "refill done"
+	# hist=sm
+	# for k in hist:
+	# 	print k.get_date()
 	return sm

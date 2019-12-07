@@ -99,12 +99,11 @@ class DividendAnalysis(StockDataAnalysis):
 		for k in hist:
 			if(k.is_dividend()):
 				self._div_dates.append(k.get_date())
-				#print k.get_date()
 		#print len(self._div_dates)
 
 	def _get_next_dividend_date(self):
 		if(self._dividend_period==0):
-			return None
+			raise Exception("no dividend period %s"%self.get_hist().get_idx())
 
 		#print self._div_dates[len(self._div_dates)-1]
 		#print self._dividend_period
