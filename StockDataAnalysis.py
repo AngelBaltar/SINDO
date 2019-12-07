@@ -69,6 +69,12 @@ class DividendAnalysis(StockDataAnalysis):
 		self._std_dev_day_sell=0
 		super(DividendAnalysis,self).__init__()
 
+	def get_date_buy(self):
+		return self._date_buy
+
+	def get_date_sell(self):
+		return self._date_sell
+
 	@classmethod
 	def get_csv_str(self):
 		ret=super(DividendAnalysis,self).get_csv_str()+";"
@@ -93,6 +99,8 @@ class DividendAnalysis(StockDataAnalysis):
 		for k in hist:
 			if(k.is_dividend()):
 				self._div_dates.append(k.get_date())
+				print k.get_date()
+		print len(self._div_dates)
 
 	def _get_next_dividend_date(self):
 		if(self._dividend_period==0):
@@ -101,16 +109,15 @@ class DividendAnalysis(StockDataAnalysis):
 		#print self._div_dates[len(self._div_dates)-1]
 		#print self._dividend_period
 		td=timedelta(days=self._dividend_period)
-		return(self._div_dates[len(self._div_dates)-1]+td)
+		return(self._div_dates[-1]+td)
 
 	def _calc_dividend_period(self):
 
 		if (len(self._div_dates)<2):
 			self._dividend_period=0
 		else:
-			l=len(self._div_dates)
-			self._dividend_period=abs((self._div_dates[l-2]-self._div_dates[l-1]).days)
-		#print "period:",self._dividend_period
+			self._dividend_period=abs((self._div_dates[-2]-self._div_dates[-1]).days)
+		print "period:",self._dividend_period
 
 	def _calc_segment(self,date_start,date_div,date_end):
 		curr_d=date_start
@@ -148,15 +155,15 @@ class DividendAnalysis(StockDataAnalysis):
 		benefit=100*(max_st.get_close()-min_st.get_close())/min_st.get_close()
 		days_min=(min_date-date_div).days
 		days_max=(max_date-date_div).days
-		# print "---------------------------------------------------------"
-		# print "date min:",min_date
-		# print "price min:",min_st.get_close()
-		# print "date max:",max_date
-		# print "price max:",max_st.get_close()
-		# print "days_min:",days_min
-		# print "days_min:",days_max
-		# print "benefit:",benefit,"%"
-		# print "---------------------------------------------------------"
+		print "---------------------------------------------------------"
+		print "date min:",min_date
+		print "price min:",min_st.get_close()
+		print "date max:",max_date
+		print "price max:",max_st.get_close()
+		print "days_min:",days_min
+		print "days_min:",days_max
+		print "benefit:",benefit,"%"
+		print "---------------------------------------------------------"
 
 		self._days_buy.append(days_min)
 		self._days_sell.append(days_max)
@@ -183,7 +190,7 @@ class DividendAnalysis(StockDataAnalysis):
 		self._std_dev_day_buy=st_dev(self._days_buy,day_buy_mean)
 		self._std_dev_day_sell=st_dev(self._days_sell,day_sell_mean)
 
-
+		print self._dividend_period
 		next_dividend=self._get_next_dividend_date()
 		#print "next dividend ",next_dividend
 		td_buy=timedelta(days=day_buy_mean)

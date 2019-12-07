@@ -13,10 +13,10 @@ class StockDaykMeasure(object):
 
 	def fill_from_csv_line(self,csv_line):
 		params=csv_line.split(';')
-		self._dt=datetime(params[0])
-		self._op=float(params[1]).replace(',','.')
-		self._cls=float(params[2]).replace(',','.')
-		self._div=int(params[3])
+		self._dt=datetime.strptime(params[0],"%Y-%m-%d %H:%M:%S")
+		self._op=float(params[1].replace(',','.'))
+		self._cls=float(params[2].replace(',','.'))
+		self._div=(int(params[3])==1)
 
 	def __str__(self):
 		ret=self._idx+" at "+str(self.get_date())
@@ -60,8 +60,8 @@ class StockHistoricMeasure(object):
 	def __init__(self,idx,datas):
 		self._st_datas=datas
 		self.sort()
-		self._date_start=self._st_datas[0]
-		self._date_end=self._st_datas[-1]
+		self._date_start=self._st_datas[0].get_date()
+		self._date_end=self._st_datas[-1].get_date()
 		self._idx=idx
 		
 
