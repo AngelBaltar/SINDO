@@ -2,6 +2,8 @@ from StockMeasure import *
 import time
 import yfinance as yf
 from datetime import timedelta
+import os
+import sys
 
 def _fetch_data_from_yf(idx,t_init,t_end):
 	msft = yf.Ticker(idx)
@@ -10,12 +12,15 @@ def _fetch_data_from_yf(idx,t_init,t_end):
 	per=str(tot_time.days)+"d"
 	#print per
 	# get historical market datas
+	sys.stdout = open(os.devnull, "w") #avoid printing
+
 	try:
 		hist = msft.history(start=t_init.strftime('%Y-%m-%d'),end=t_end.strftime('%Y-%m-%d'))
 	except:
 		time.sleep(0.2)
 		hist = msft.history(start=t_init.strftime('%Y-%m-%d'),end=t_end.strftime('%Y-%m-%d'))
 
+	sys.stdout = sys.__stdout__
 	datas=[]
 	for i in range(0,len(hist['Open'])):
 		dt=datetime.strptime(str(hist.axes[0][i]), "%Y-%m-%d %H:%M:%S")

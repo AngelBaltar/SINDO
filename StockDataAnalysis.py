@@ -103,7 +103,7 @@ class DividendAnalysis(StockDataAnalysis):
 
 	def _get_next_dividend_date(self):
 		if(self._dividend_period==0):
-			raise Exception("no dividend period %s"%self.get_hist().get_idx())
+			return None
 
 		#print self._div_dates[len(self._div_dates)-1]
 		#print self._dividend_period
@@ -171,7 +171,7 @@ class DividendAnalysis(StockDataAnalysis):
 	def analyze(self):
 		self._calc_dividend_dates()
 		self._calc_dividend_period()
-		if(len(self._div_dates)<3):
+		if(len(self._div_dates)<2):
 			print "skipping %s no enough dividends"%self.get_hist().get_idx()
 			return
 		dt_range=timedelta(days=10)
@@ -189,6 +189,8 @@ class DividendAnalysis(StockDataAnalysis):
 		self._std_dev_day_sell=st_dev(self._days_sell,day_sell_mean)
 
 		next_dividend=self._get_next_dividend_date()
+		if(next_dividend==None):
+			return
 		#print "next dividend ",next_dividend
 		td_buy=timedelta(days=day_buy_mean)
 		td_sell=timedelta(days=day_sell_mean)
@@ -201,8 +203,5 @@ class DividendAnalysis(StockDataAnalysis):
 		while(self._date_sell.weekday()==5) or ((self._date_sell.weekday()==6)):
 			self._date_sell-=timedelta(days=1)
 		
-		td=datetime.now()
-		if(self._date_buy<td) or (self._date_sell<td):#not a valid investment
-			return
-		score=self._benefit_mean/((self._std_dev_day_sell*self._std_dev_day_buy)+1)
+		score=self._benefit_mean/(self._std_dev_day_buy+1)
 		self._set_score(score)
