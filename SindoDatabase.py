@@ -6,6 +6,7 @@ import os
 import sys
 
 def _fetch_data_from_yf(idx,t_init,t_end):
+	#print "fetch from yf %s %s %s"%(idx,t_init,t_end)
 	msft = yf.Ticker(idx)
 
 	tot_time=t_end-t_init
