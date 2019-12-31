@@ -12,17 +12,15 @@ import time
 version="v0.2"
 
 def analizer(idx):
-	ret=""
 	td=datetime.now()
 	h=get_data(td-timedelta(days=configuration.hist_days),td,idx)
 	kk=DividendAnalysis()
 	if(h):
 		kk.set_hist(h)
 		kk.analyze()
-		if(kk.get_score()>0):
-			ret=str(kk)+"\n"
-		del kk
-	return ret
+		h.free_memory()
+		return kk
+	return StockDataAnalysis()
 	
 
 		
@@ -54,9 +52,8 @@ if __name__ == "__main__":
 	analisys_list=[]
 	print "working..."
 
-	p = multiprocessing.Pool(max(multiprocessing.cpu_count()-1,2))
-	fo=open(configuration.out_file+".csv",'w')
-	fo.write(DividendAnalysis.get_csv_str())
+	p = multiprocessing.Pool(max(multiprocessing.cpu_count(),2))
+	
 
 	print_list=[]
 	
@@ -64,12 +61,23 @@ if __name__ == "__main__":
 	p.close()
 	p.join()
 
+	fo=open(configuration.out_file+".csv",'w')
+	fo.write(DividendAnalysis.get_csv_str())
+	fpy=open(configuration.out_file+".py",'w')
+
 	# for k in idx_list:
 	#  	print_list.append(analizer(k))
-	
+	print_list.sort(reverse=True)
+	stock_list=[]
 	for k in print_list:
-		fo.write(k)
+		if(k):
+			fo.write(str(k))
+			if(k.get_score()>0):
+				stock_list.append(k.get_idx())
+				print(str(k))
 
 	fo.close()
+	fpy.write(str(stock_list))
+	fpy.close()
 	end=time.time()
 	print "elapsed time %f"%(end-start)

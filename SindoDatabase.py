@@ -6,6 +6,13 @@ import os
 import sys
 
 def _fetch_data_from_yf(idx,t_init,t_end):
+
+	while(t_init.weekday()==5) or ((t_init.weekday()==6)):
+			t_init-=timedelta(days=1)
+
+	while(t_end.weekday()==5) or ((t_end.weekday()==6)):
+		t_end+=timedelta(days=1)
+
 	#print "fetch from yf %s %s %s"%(idx,t_init,t_end)
 	msft = yf.Ticker(idx)
 
@@ -17,14 +24,22 @@ def _fetch_data_from_yf(idx,t_init,t_end):
 
 	try:
 		hist = msft.history(start=t_init.strftime('%Y-%m-%d'),end=t_end.strftime('%Y-%m-%d'))
-	except:
-		time.sleep(0.2)
-		hist = msft.history(start=t_init.strftime('%Y-%m-%d'),end=t_end.strftime('%Y-%m-%d'))
-
+	except Exception as e:
+		sys.stdout = sys.__stdout__
+		#print e
+		return None
 	sys.stdout = sys.__stdout__
 	datas=[]
+	last_dt=t_init
 	for i in range(0,len(hist['Open'])):
 		dt=datetime.strptime(str(hist.axes[0][i]), "%Y-%m-%d %H:%M:%S")
+		
+		while((i>0) and (last_dt<dt)):#fill the gap with the last data
+			stock=StockDaykMeasure(idx,last_dt,hist['Open'][i-1],hist['Close'][i-1],(hist['Dividends'][i-1]!=0.0))
+			datas.append(stock)
+			last_dt+=timedelta(days=1)
+
+		last_dt=dt
 		stock=StockDaykMeasure(idx,dt,hist['Open'][i],hist['Close'][i],(hist['Dividends'][i]!=0.0))
 		datas.append(stock)
 

@@ -69,6 +69,11 @@ class StockHistoricMeasure(object):
 	def get_csv_str(self):
 		return "index;Date start;Date end"
 
+	def free_memory(self):
+		data=self._st_datas
+		self._st_datas=[]
+		del data
+
 	def __str__(self):
 		return "%s;%s;%s"%(self._idx,str(self._date_start),str(self._date_end))
 

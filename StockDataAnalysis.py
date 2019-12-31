@@ -27,16 +27,24 @@ class StockDataAnalysis(object):
 	def __init__(self):
 		self._score=0
 		self._hist=None
+		self._idx=""
 
 	def set_hist(self,h):
 		self._hist=h
+		self._idx=h.get_idx()
+
+	def get_idx(self):
+		return self._idx
+
+	def get_hist(self):
+		return self._hist
 
 	@classmethod
 	def get_csv_str(self):
 		return "%s;score"%(StockHistoricMeasure.get_csv_str())
 
 	def __str__(self):
-		return "%s;%s"%(str(self._hist),str(self.get_score()).replace('.',','))
+		return "%s;SCORE(%s)"%(str(self._hist),str(self.get_score()).replace('.',','))
 
 	def get_score(self):
 		return self._score
@@ -174,6 +182,7 @@ class DividendAnalysis(StockDataAnalysis):
 		if(len(self._div_dates)<2):
 			print "skipping %s no enough dividends"%self.get_hist().get_idx()
 			return
+		print "analyzing %s"%self.get_idx()
 		dt_range=timedelta(days=10)
 		for k in self._div_dates:
 			self._calc_segment(k-dt_range,k,k+dt_range)
