@@ -14,15 +14,13 @@ def analize_for_test(args):
 	start_time = time.time()
 	h=get_data(start_date,end_date,tck)
 	#print("---%s %s seconds ---" %(tck,(time.time() - start_time)))
-	if not h:
-		return None
 	kk=DividendAnalysis()
+	if not h:
+		return kk
 	kk.set_hist(h)
 	kk.analyze()
-	if(kk.get_score()>0):
-		kk.get_hist().free_memory()
-		return kk
-	return None
+	kk.get_hist().free_memory()
+	return kk
 
 class SindoTest(unittest.TestCase):
 
@@ -37,7 +35,7 @@ class SindoTest(unittest.TestCase):
 
 		p = multiprocessing.Pool(max(multiprocessing.cpu_count(),2))
 
-		
+		#stock_list=['AAPL']
 		#stock_list=['TXG','YI','PIH','PIHPP','TURN','FLWS','BCOW','FCCY','SRCE','VNET','TWOU',
 		#'QFIN','JOBS','JFK','JFKKR','JFKKU','JFKKW','EGHT','JFU','AAON','ABEO','ABEOW','ABIL','ABMD']
 		args_list=[[tck,date_start,date_end] for tck in stock_list]
@@ -47,19 +45,23 @@ class SindoTest(unittest.TestCase):
 
 		perc_mean_benefit=0
 		count=0
+		benefits_list.sort(reverse=True)
 		for kk in benefits_list:
-			try:
-				h_fut=get_data(kk.get_date_buy()-timedelta(days=1),kk.get_date_sell()+timedelta(days=1),tck)
-				real_benefit=h_fut[kk.get_date_sell()].get_close()-h_fut[kk.get_date_buy()].get_close()
-				
-				perc_benefit=real_benefit/h_fut[kk.get_date_buy()].get_close()
-				td=kk.get_date_sell()-kk.get_date_buy()
-				perc_benefit=perc_benefit*365/td.days
-				count+=1
-				perc_mean_benefit+=perc_benefit
-				print "stock %s %f%% benefit"%(args_list[k][0],perc_benefit)
-			except:
-				pass
+			if kk and kk.get_score()>5:
+				try:
+					h_fut=get_data(kk.get_date_buy()-timedelta(days=1),kk.get_date_sell()+timedelta(days=1),tck)
+					real_benefit=h_fut[kk.get_date_sell()].get_close()-h_fut[kk.get_date_buy()].get_close()
+					
+					perc_benefit=real_benefit/h_fut[kk.get_date_buy()].get_close()
+					td=kk.get_date_sell()-kk.get_date_buy()
+					perc_benefit=perc_benefit*365*100/td.days
+					count+=1
+					perc_mean_benefit+=perc_benefit
+					print "stock %s score(%f) %f benefit"%(kk.get_idx(),kk.get_score(),perc_benefit)
+				except Exception as e:
+					print str(e)
+			if count>35:
+				break
 
 		if count>0:
 			perc_mean_benefit/=count
